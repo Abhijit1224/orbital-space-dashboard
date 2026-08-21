@@ -9,9 +9,11 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 let issMarker = null;
 let issSatrec = null;
 let followISS = false;
-const chartLabels = [];
-const altitudeData = [];
-const velocityData = [];
+let chartLabels = [];
+let altitudeData = [];
+let velocityData = [];
+
+let chartSatelliteName = "International Space Station";
 
 const orbitalChart = new Chart(
     document.getElementById("orbitalChart"),
@@ -185,17 +187,7 @@ if (followISS) {
 
     document.getElementById("updated").textContent =
         now.toLocaleTimeString();
-        chartLabels.push(now.toLocaleTimeString());
-altitudeData.push(Number(altitude.toFixed(1)));
-velocityData.push(Number(velocity.toFixed(2)));
-
-if (chartLabels.length > 30) {
-    chartLabels.shift();
-    altitudeData.shift();
-    velocityData.shift();
-}
-
-orbitalChart.update();
+        
 }
 
 loadISSData().catch(error => {
@@ -216,3 +208,242 @@ followButton.addEventListener("click", () => {
         map.setView(issMarker.getLatLng());
     }
 });
+const searchInput = document.getElementById("satelliteSearch");
+const searchButton = document.getElementById("searchButton");
+const searchResults = document.getElementById("searchResults");
+
+let selectedSatrec = null;
+let selectedMarker = null;
+let selectedSatelliteName = null;
+async function trackSatellite(noradId, satelliteName) {
+    try {
+        const url =
+            `https://celestrak.org/NORAD/elements/gp.php?CATNR=${noradId}&FORMAT=JSON`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Could not load satellite data.");
+        }
+
+        const data = await response.json();
+
+        if (!data.length) {
+            throw new Error("Satellite data not found.");
+        }
+
+        selectedSatrec = satellite.json2satrec(data[0]);
+        selectedSatelliteName = satelliteName;
+
+        updateSelectedSatellite();
+
+        searchResults.innerHTML = `
+            <p>🛰️ Tracking <strong>${satelliteName}</strong></p>
+        `;
+
+    } catch (error) {
+        console.error("Satellite tracking error:", error);
+
+        searchResults.innerHTML =
+            "<p>Unable to load satellite telemetry.</p>";
+    }
+}
+function updateSelectedSatellite() {
+    if (!selectedSatrec) return;
+
+    const now = new Date();
+
+    const positionAndVelocity =
+        satellite.propagate(selectedSatrec, now);
+
+    const positionEci = positionAndVelocity.position;
+    const velocityEci = positionAndVelocity.velocity;
+
+    if (!positionEci || !velocityEci) return;
+
+    const gmst = satellite.gstime(now);
+
+    const geodetic =
+        satellite.eciToGeodetic(positionEci, gmst);
+
+    const latitude =
+        satellite.degreesLat(geodetic.latitude);
+
+    const longitude =
+        satellite.degreesLong(geodetic.longitude);
+
+    const altitude = geodetic.height;
+
+    const velocity = Math.sqrt(
+        velocityEci.x ** 2 +
+        velocityEci.y ** 2 +
+        velocityEci.z ** 2
+    );
+    const meanMotion = selectedSatrec.no;
+const inclination = selectedSatrec.inclo;
+const eccentricity = selectedSatrec.ecco;
+
+const earthRadius = 6378.137;
+const earthMu = 398600.4418;
+
+const orbitalPeriodMinutes =
+    (2 * Math.PI) / meanMotion;
+
+const semiMajorAxis =
+    Math.cbrt(
+        earthMu /
+        Math.pow(meanMotion / 60, 2)
+    );
+
+const perigeeAltitude =
+    semiMajorAxis * (1 - eccentricity) - earthRadius;
+
+const apogeeAltitude =
+    semiMajorAxis * (1 + eccentricity) - earthRadius;
+
+const inclinationDegrees =
+    inclination * (180 / Math.PI);
+
+document.getElementById("perigee").textContent =
+    `${perigeeAltitude.toFixed(1)} km`;
+
+document.getElementById("apogee").textContent =
+    `${apogeeAltitude.toFixed(1)} km`;
+
+document.getElementById("orbitalPeriod").textContent =
+    `${orbitalPeriodMinutes.toFixed(1)} min`;
+
+document.getElementById("inclination").textContent =
+    `${inclinationDegrees.toFixed(2)}°`;
+document.getElementById("analyticsAltitude").textContent =
+    `${altitude.toFixed(1)} km`;
+
+document.getElementById("analyticsVelocity").textContent =
+    `${velocity.toFixed(2)} km/s`;
+
+document.getElementById("trackingStatus").textContent =
+    `TRACKING ${selectedSatelliteName}`;
+    if (chartSatelliteName !== selectedSatelliteName) {
+    chartSatelliteName = selectedSatelliteName;
+
+    chartLabels = [];
+    altitudeData = [];
+    velocityData = [];
+
+    orbitalChart.data.labels = chartLabels;
+    orbitalChart.data.datasets[0].data = altitudeData;
+    orbitalChart.data.datasets[1].data = velocityData;
+
+    orbitalChart.update();
+}
+
+chartLabels.push(now.toLocaleTimeString());
+altitudeData.push(Number(altitude.toFixed(1)));
+velocityData.push(Number(velocity.toFixed(2)));
+
+if (chartLabels.length > 30) {
+    chartLabels.shift();
+    altitudeData.shift();
+    velocityData.shift();
+}
+
+orbitalChart.update();
+    if (!selectedMarker) {
+        selectedMarker = L.marker([
+            latitude,
+            longitude
+        ])
+        .addTo(map)
+        .bindPopup(
+            `🛰️ ${selectedSatelliteName}`
+        );
+    } else {
+        selectedMarker.setLatLng([
+            latitude,
+            longitude
+        ]);
+
+        selectedMarker.setPopupContent(
+            `🛰️ ${selectedSatelliteName}`
+        );
+    }
+
+    document.getElementById("latitude").textContent =
+        `${latitude.toFixed(2)}°`;
+
+    document.getElementById("longitude").textContent =
+        `${longitude.toFixed(2)}°`;
+
+    document.getElementById("altitude").textContent =
+        `${altitude.toFixed(1)} km`;
+
+    document.getElementById("velocity").textContent =
+        `${velocity.toFixed(2)} km/s`;
+
+    document.getElementById("updated").textContent =
+        now.toLocaleTimeString();
+}
+async function searchSatellites() {
+    const query = searchInput.value.trim();
+
+    if (!query) {
+        searchResults.innerHTML = "<p>Enter a satellite name.</p>";
+        return;
+    }
+
+    searchResults.innerHTML = "<p>Searching CelesTrak...</p>";
+
+    try {
+        const url =
+            `https://celestrak.org/NORAD/elements/gp.php?NAME=${encodeURIComponent(query)}&FORMAT=JSON`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Satellite search failed.");
+        }
+
+        const results = await response.json();
+
+        searchResults.innerHTML = "";
+
+        if (!results.length) {
+            searchResults.innerHTML =
+                "<p>No satellites found.</p>";
+            return;
+        }
+
+        results.slice(0, 20).forEach(satellite => {
+    const result = document.createElement("div");
+
+    result.className = "search-result";
+
+    result.innerHTML = `
+        <strong>🛰️ ${satellite.OBJECT_NAME}</strong>
+        <span>NORAD ID: ${satellite.NORAD_CAT_ID}</span>
+    `;
+
+    result.addEventListener("click", () => {
+        trackSatellite(satellite.NORAD_CAT_ID, satellite.OBJECT_NAME);
+    });
+
+    searchResults.appendChild(result);
+});
+
+    } catch (error) {
+        console.error("Satellite search error:", error);
+
+        searchResults.innerHTML =
+            "<p>Unable to load satellite data.</p>";
+    }
+}
+
+
+searchButton.addEventListener("click", searchSatellites);
+
+searchInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        searchSatellites();
+    }
+});
+setInterval(updateSelectedSatellite, 1000);
