@@ -107,7 +107,11 @@ async function loadISSData() {
 
     issSatrec = satellite.json2satrec(data[0]);
 
-    updateISSPosition();
+// Use ISS as the initial selected satellite
+selectedSatrec = issSatrec;
+selectedSatelliteName = "International Space Station";
+
+updateISSPosition();
 }
 
 function updateISSPosition() {
@@ -314,9 +318,12 @@ async function trackSatellite(noradId, satelliteName) {
         selectedSatelliteName = satelliteName;
         document.getElementById("comparisonPrimary").textContent =
     satelliteName;
-    comparisonSatrec = selectedSatrec;
-comparisonSatelliteName = satelliteName;
-comparisonNoradId = noradId;
+    document.getElementById("summaryName").textContent =
+    satelliteName;
+
+document.getElementById("summaryNorad").textContent =
+    `NORAD ${noradId}`;
+    
         selectedGroundTrack.setLatLngs([]);
 document.getElementById("selectedSatelliteDisplay").textContent =
     satelliteName;
@@ -359,6 +366,9 @@ async function setComparisonSatellite(noradId, satelliteName) {
 
         document.getElementById("comparisonSecondary").textContent =
             satelliteName;
+           searchResults.innerHTML = `
+    <p>🛰️ Comparing <strong>${satelliteName}</strong></p>
+`; 
 updateComparisonData();
     } catch (error) {
         console.error("Comparison satellite error:", error);
@@ -624,23 +634,39 @@ async function searchSatellites() {
         <span>NORAD ID: ${satellite.NORAD_CAT_ID}</span>
     `;
 
-    result.addEventListener("click", () => {
+    const primaryButton = document.createElement("button");
+primaryButton.textContent = "SET PRIMARY";
 
-    if (!comparisonSatrec) {
-        trackSatellite(
-            satellite.NORAD_CAT_ID,
-            satellite.OBJECT_NAME
-        );
-    } else if (
-        satellite.OBJECT_NAME !== comparisonSatelliteName
+const secondaryButton = document.createElement("button");
+secondaryButton.textContent = "SET SECONDARY";
+
+primaryButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+
+    trackSatellite(
+        satellite.NORAD_CAT_ID,
+        satellite.OBJECT_NAME
+    );
+});
+
+secondaryButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+
+    if (
+        satellite.NORAD_CAT_ID ===
+        comparisonNoradId
     ) {
-        setComparisonSatellite(
-            satellite.NORAD_CAT_ID,
-            satellite.OBJECT_NAME
-        );
+        return;
     }
 
+    setComparisonSatellite(
+        satellite.NORAD_CAT_ID,
+        satellite.OBJECT_NAME
+    );
 });
+
+result.appendChild(primaryButton);
+result.appendChild(secondaryButton);
 
     searchResults.appendChild(result);
 });
