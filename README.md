@@ -4,9 +4,9 @@
 
 ## 🚀 Overview
 
-ORBITAL is an interactive satellite-tracking dashboard built to visualize real-time orbital telemetry and satellite movement.
+ORBITAL is an interactive satellite-tracking dashboard designed to visualize real-time orbital telemetry and satellite movement.
 
-The platform uses live Two-Line Element (TLE) data to calculate satellite position, altitude, velocity, and orbital parameters directly in the browser.
+The platform retrieves live Two-Line Element (TLE) data and uses orbital propagation to calculate satellite position, altitude, velocity, and other orbital parameters directly in the browser.
 
 ## ✨ Features
 
@@ -24,20 +24,20 @@ The platform uses live Two-Line Element (TLE) data to calculate satellite positi
 
 ## 🛠️ Tech Stack
 
-- **HTML5** — Dashboard structure
-- **CSS3** — UI and responsive styling
-- **JavaScript (ES6+)** — Application logic and orbital calculations
-- **Leaflet.js** — Interactive satellite map
-- **Chart.js** — Real-time telemetry visualization
-- **satellite.js** — Orbital propagation and coordinate calculations
-- **CelesTrak** — Live satellite orbital data
-- **OpenStreetMap** — Map tiles
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+- Leaflet.js
+- Chart.js
+- satellite.js
+- CelesTrak
+- OpenStreetMap
 
 ## 📡 Data & Orbital Calculations
 
 ORBITAL retrieves current satellite orbital elements from CelesTrak.
 
-The application uses `satellite.js` to propagate satellite orbits and calculate:
+Using satellite.js, the application calculates:
 
 - Latitude
 - Longitude
@@ -51,7 +51,6 @@ The application uses `satellite.js` to propagate satellite orbits and calculate:
 
 ## ⚙️ How It Works
 
-```text
 CelesTrak
     ↓
 Live TLE / Orbital Data
@@ -65,3 +64,36 @@ Telemetry & Position
 Leaflet Map + Chart.js
     ↓
 ORBITAL Dashboard
+
+## 💻 Run Locally
+
+Clone the repository:
+
+git clone https://github.com/Abhijit1224/orbital-space-dashboard.git
+
+cd orbital-space-dashboard
+
+Open the frontend folder and run index.html using a local development server such as VS Code Live Server.
+
+## 📁 Project Structure
+
+orbital-space-dashboard/
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+└── README.md
+
+## 🎯 Future Scope
+
+- Satellite visibility prediction
+- Satellite pass prediction
+- Collision-risk analysis
+- Historical orbital data
+- Satellite constellation analysis
+
+## 👨‍💻 Author
+
+Abhijit Pradhan
+
+Built as a personal project to explore satellite tracking, orbital mechanics, real-time data visualization, and modern web development.
