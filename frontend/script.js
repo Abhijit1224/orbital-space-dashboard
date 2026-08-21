@@ -9,7 +9,75 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 let issMarker = null;
 let issSatrec = null;
 let followISS = false;
+const chartLabels = [];
+const altitudeData = [];
+const velocityData = [];
 
+const orbitalChart = new Chart(
+    document.getElementById("orbitalChart"),
+    {
+        type: "line",
+
+        data: {
+            labels: chartLabels,
+
+            datasets: [
+                {
+                    label: "Altitude (km)",
+                    data: altitudeData,
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: "yAltitude"
+                },
+                {
+                    label: "Velocity (km/s)",
+                    data: velocityData,
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: "yVelocity"
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            animation: false,
+
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Time"
+                    }
+                },
+
+                yAltitude: {
+                    type: "linear",
+                    position: "left",
+
+                    title: {
+                        display: true,
+                        text: "Altitude (km)"
+                    }
+                },
+
+                yVelocity: {
+                    type: "linear",
+                    position: "right",
+
+                    title: {
+                        display: true,
+                        text: "Velocity (km/s)"
+                    },
+
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    }
+);
 async function loadISSData() {
     const url =
         "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON";
@@ -82,6 +150,17 @@ if (followISS) {
 
     document.getElementById("updated").textContent =
         now.toLocaleTimeString();
+        chartLabels.push(now.toLocaleTimeString());
+altitudeData.push(Number(altitude.toFixed(1)));
+velocityData.push(Number(velocity.toFixed(2)));
+
+if (chartLabels.length > 30) {
+    chartLabels.shift();
+    altitudeData.shift();
+    velocityData.shift();
+}
+
+orbitalChart.update();
 }
 
 loadISSData().catch(error => {
