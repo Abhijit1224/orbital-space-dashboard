@@ -9,6 +9,19 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 let issMarker = null;
 let issSatrec = null;
 let followISS = false;
+let issGroundTrack = L.polyline([], {
+    color: "#000000",
+    weight: 2,
+    opacity: 0.7,
+    dashArray: "6, 8"
+}).addTo(map);
+
+let selectedGroundTrack = L.polyline([], {
+    color: "#2c2b2b",
+    weight: 2,
+    opacity: 0.6,
+    dashArray: "6, 8"
+}).addTo(map);
 let chartLabels = [];
 let altitudeData = [];
 let velocityData = [];
@@ -152,6 +165,12 @@ document.getElementById("inclination").textContent =
     const longitude = satellite.degreesLong(geodetic.longitude);
 
     const altitude = geodetic.height;
+    issGroundTrack.addLatLng([latitude, longitude]);
+
+if (issGroundTrack.getLatLngs().length > 120) {
+    issGroundTrack.getLatLngs().shift();
+    issGroundTrack.redraw();
+}
 let orbitClass = "";
 
 if (altitude < 2000) {
@@ -266,6 +285,7 @@ const searchResults = document.getElementById("searchResults");
 let selectedSatrec = null;
 let selectedMarker = null;
 let selectedSatelliteName = null;
+let followSelectedSatellite = false;
 async function trackSatellite(noradId, satelliteName) {
     try {
         const url =
@@ -287,6 +307,7 @@ async function trackSatellite(noradId, satelliteName) {
         document.getElementById("trackingStatus").textContent =
     "🟡 ACQUIRING";
         selectedSatelliteName = satelliteName;
+        selectedGroundTrack.setLatLngs([]);
 document.getElementById("selectedSatelliteDisplay").textContent =
     satelliteName;
 
@@ -330,7 +351,12 @@ function updateSelectedSatellite() {
         satellite.degreesLong(geodetic.longitude);
 
     const altitude = geodetic.height;
+selectedGroundTrack.addLatLng([latitude, longitude]);
 
+if (selectedGroundTrack.getLatLngs().length > 120) {
+    selectedGroundTrack.getLatLngs().shift();
+    selectedGroundTrack.redraw();
+}
     const velocity = Math.sqrt(
         velocityEci.x ** 2 +
         velocityEci.y ** 2 +
@@ -424,7 +450,9 @@ orbitalChart.update();
             latitude,
             longitude
         ]);
-
+if (followSelectedSatellite) {
+    map.setView([latitude, longitude]);
+}
         selectedMarker.setPopupContent(`
     <strong>🛰️ ${selectedSatelliteName}</strong><br>
     <span style="color:#55e6a5;">● SELECTED SATELLITE</span>
@@ -510,3 +538,26 @@ searchInput.addEventListener("keydown", event => {
     }
 });
 setInterval(updateSelectedSatellite, 1000);
+const followSatelliteButton =
+    document.getElementById("followSatelliteButton");
+
+followSatelliteButton.addEventListener("click", () => {
+
+    if (!selectedSatrec || !selectedMarker) {
+        return;
+    }
+
+    followSelectedSatellite = !followSelectedSatellite;
+
+    followSatelliteButton.textContent =
+        followSelectedSatellite
+            ? "🛰️ FOLLOWING SATELLITE"
+            : "🛰️ FOLLOW SATELLITE";
+
+    if (followSelectedSatellite) {
+        map.setView(
+            selectedMarker.getLatLng(),
+            4
+        );
+    }
+});

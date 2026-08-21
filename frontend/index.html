@@ -28,6 +28,17 @@
                 <h2>🌍 Satellite Tracking</h2>
                 <button id="followButton">🛰️ FOLLOW ISS</button>
                 <div id="map"></div>
+             <div class="map-legend">
+    <div>
+        <span class="legend-line iss-line"></span>
+        ISS Ground Track
+    </div>
+
+    <div>
+        <span class="legend-line selected-line"></span>
+        Selected Satellite
+    </div>
+</div>   
             </div>
 
             <div class="panel">
@@ -37,6 +48,9 @@
     <strong id="selectedSatelliteDisplay">INTERNATIONAL SPACE STATION</strong>
     <span id="selectedNoradDisplay">NORAD 25544</span>
 </div>  
+<button id="followSatelliteButton">
+    🛰️ FOLLOW SATELLITE
+</button>
                 <div class="satellite-info">
     <div class="data-row">
         <span>Latitude</span>
@@ -110,6 +124,7 @@
     <span>Orbit Class</span>
     <strong id="orbitClass">--</strong>
 </div>
+
 </div>
 <canvas id="orbitalChart"></canvas>
             </div>
@@ -130,6 +145,16 @@
     </div>
 
     <div id="searchResults"></div>
+    <div id="missionSummary" class="mission-summary">
+    <div class="summary-title">SATELLITE INTELLIGENCE</div>
+
+    <strong id="summaryName">--</strong>
+    <span id="summaryNorad">NORAD --</span>
+
+    <div class="summary-status">
+        🟢 LIVE
+    </div>
+</div>
 </div>
 
         </section>
