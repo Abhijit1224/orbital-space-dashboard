@@ -152,7 +152,17 @@ document.getElementById("inclination").textContent =
     const longitude = satellite.degreesLong(geodetic.longitude);
 
     const altitude = geodetic.height;
+let orbitClass = "";
 
+if (altitude < 2000) {
+    orbitClass = "LEO";
+} else if (altitude < 35786) {
+    orbitClass = "MEO";
+} else {
+    orbitClass = "GEO / HIGH ORBIT";
+}
+document.getElementById("orbitClass").textContent =
+    orbitClass;
     const velocity = Math.sqrt(
         velocityEci.x ** 2 +
         velocityEci.y ** 2 +
@@ -166,7 +176,13 @@ document.getElementById("analyticsVelocity").textContent =
     if (!issMarker) {
         issMarker = L.marker([latitude, longitude])
             .addTo(map)
-            .bindPopup("🛰️ International Space Station");
+            .bindPopup(`
+
+        <strong>🛰️ INTERNATIONAL SPACE STATION</strong><br>
+
+        <span style="color:#55e6a5;">● LIVE</span>
+
+    `);
     } else {
         issMarker.setLatLng([latitude, longitude]);
     }
@@ -197,15 +213,50 @@ loadISSData().catch(error => {
 setInterval(updateISSPosition, 1000);
 const followButton = document.getElementById("followButton");
 
-followButton.addEventListener("click", () => {
+
+followButton.addEventListener("click", async () => {
+
     followISS = !followISS;
 
-    followButton.textContent = followISS
-        ? "🛰️ FOLLOWING ISS"
-        : "🛰️ FOLLOW ISS";
+    if (!followISS) {
+        followButton.textContent = "🛰️ FOLLOW ISS";
+        return;
+    }
 
-    if (followISS && issMarker) {
-        map.setView(issMarker.getLatLng());
+    followButton.textContent = "🛰️ LOCATING ISS...";
+
+    try {
+
+        if (!issSatrec) {
+            const url =
+                "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON";
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error("ISS data unavailable");
+            }
+
+            const data = await response.json();
+
+            issSatrec = satellite.json2satrec(data[0]);
+        }
+
+        updateISSPosition();
+
+        if (issMarker) {
+            map.setView(issMarker.getLatLng(), 4);
+            issMarker.openPopup();
+            followButton.textContent = "🛰️ FOLLOWING ISS";
+        }
+
+    } catch (error) {
+
+        console.error("ISS follow error:", error);
+
+        followISS = false;
+        followButton.textContent = "🛰️ FOLLOW ISS";
+
     }
 });
 const searchInput = document.getElementById("satelliteSearch");
@@ -233,8 +284,14 @@ async function trackSatellite(noradId, satelliteName) {
         }
 
         selectedSatrec = satellite.json2satrec(data[0]);
+        document.getElementById("trackingStatus").textContent =
+    "🟡 ACQUIRING";
         selectedSatelliteName = satelliteName;
+document.getElementById("selectedSatelliteDisplay").textContent =
+    satelliteName;
 
+document.getElementById("selectedNoradDisplay").textContent =
+    `NORAD ${noradId}`;
         updateSelectedSatellite();
 
         searchResults.innerHTML = `
@@ -322,7 +379,7 @@ document.getElementById("analyticsVelocity").textContent =
     `${velocity.toFixed(2)} km/s`;
 
 document.getElementById("trackingStatus").textContent =
-    `TRACKING ${selectedSatelliteName}`;
+    `🟢 LIVE TRACKING`;
     if (chartSatelliteName !== selectedSatelliteName) {
     chartSatelliteName = selectedSatelliteName;
 
@@ -355,17 +412,23 @@ orbitalChart.update();
         ])
         .addTo(map)
         .bindPopup(
-            `🛰️ ${selectedSatelliteName}`
-        );
+           `
+
+    <strong>🛰️ ${selectedSatelliteName}</strong><br>
+
+    <span style="color:#55e6a5;">● SELECTED SATELLITE</span>
+
+`);
     } else {
         selectedMarker.setLatLng([
             latitude,
             longitude
         ]);
 
-        selectedMarker.setPopupContent(
-            `🛰️ ${selectedSatelliteName}`
-        );
+        selectedMarker.setPopupContent(`
+    <strong>🛰️ ${selectedSatelliteName}</strong><br>
+    <span style="color:#55e6a5;">● SELECTED SATELLITE</span>
+`);
     }
 
     document.getElementById("latitude").textContent =

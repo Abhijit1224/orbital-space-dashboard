@@ -32,6 +32,11 @@
 
             <div class="panel">
                 <h2>🛰️ Satellite Data</h2>
+              <div class="selected-satellite">
+    <span class="satellite-label">CURRENTLY TRACKING</span>
+    <strong id="selectedSatelliteDisplay">INTERNATIONAL SPACE STATION</strong>
+    <span id="selectedNoradDisplay">NORAD 25544</span>
+</div>  
                 <div class="satellite-info">
     <div class="data-row">
         <span>Latitude</span>
@@ -75,7 +80,9 @@
 
     <div class="metric">
         <span>Tracking Status</span>
-        <strong id="trackingStatus">LIVE</strong>
+        <strong id="trackingStatus" class="status-badge">
+    🟢 LIVE TRACKING
+</strong>
     </div>
 </div>
 <div class="orbital-parameters">
@@ -99,7 +106,10 @@
         <span>Inclination</span>
         <strong id="inclination">--</strong>
     </div>
-
+<div class="metric">
+    <span>Orbit Class</span>
+    <strong id="orbitClass">--</strong>
+</div>
 </div>
 <canvas id="orbitalChart"></canvas>
             </div>
