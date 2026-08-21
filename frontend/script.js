@@ -99,7 +99,42 @@ function updateISSPosition() {
     if (!issSatrec) return;
 
     const now = new Date();
+const meanMotion = issSatrec.no;
+const inclination = issSatrec.inclo;
+const eccentricity = issSatrec.ecco;
+const earthRadius = 6378.137;
+const earthMu = 398600.4418;
 
+const meanMotionRadPerMin = meanMotion;
+
+const orbitalPeriodMinutes =
+    (2 * Math.PI) / meanMotionRadPerMin;
+
+const semiMajorAxis =
+    Math.cbrt(
+        earthMu /
+        Math.pow(meanMotion / 60, 2)
+    );
+
+const perigeeAltitude =
+    semiMajorAxis * (1 - eccentricity) - earthRadius;
+
+const apogeeAltitude =
+    semiMajorAxis * (1 + eccentricity) - earthRadius;
+
+const inclinationDegrees =
+    inclination * (180 / Math.PI);
+    document.getElementById("perigee").textContent =
+    `${perigeeAltitude.toFixed(1)} km`;
+
+document.getElementById("apogee").textContent =
+    `${apogeeAltitude.toFixed(1)} km`;
+
+document.getElementById("orbitalPeriod").textContent =
+    `${orbitalPeriodMinutes.toFixed(1)} min`;
+
+document.getElementById("inclination").textContent =
+    `${inclinationDegrees.toFixed(2)}°`;
     const positionAndVelocity =
         satellite.propagate(issSatrec, now);
 
