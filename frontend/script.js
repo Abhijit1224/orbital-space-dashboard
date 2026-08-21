@@ -286,6 +286,11 @@ let selectedSatrec = null;
 let selectedMarker = null;
 let selectedSatelliteName = null;
 let followSelectedSatellite = false;
+let comparisonSatrec = null;
+let comparisonSatelliteName = null;
+let comparisonNoradId = null;
+let comparisonAltitude = null;
+let comparisonVelocity = null;
 async function trackSatellite(noradId, satelliteName) {
     try {
         const url =
@@ -307,6 +312,11 @@ async function trackSatellite(noradId, satelliteName) {
         document.getElementById("trackingStatus").textContent =
     "🟡 ACQUIRING";
         selectedSatelliteName = satelliteName;
+        document.getElementById("comparisonPrimary").textContent =
+    satelliteName;
+    comparisonSatrec = selectedSatrec;
+comparisonSatelliteName = satelliteName;
+comparisonNoradId = noradId;
         selectedGroundTrack.setLatLngs([]);
 document.getElementById("selectedSatelliteDisplay").textContent =
     satelliteName;
@@ -324,6 +334,106 @@ document.getElementById("selectedNoradDisplay").textContent =
 
         searchResults.innerHTML =
             "<p>Unable to load satellite telemetry.</p>";
+    }
+}
+async function setComparisonSatellite(noradId, satelliteName) {
+    try {
+        const url =
+            `https://celestrak.org/NORAD/elements/gp.php?CATNR=${noradId}&FORMAT=JSON`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Could not load comparison satellite.");
+        }
+
+        const data = await response.json();
+
+        if (!data.length) {
+            throw new Error("Comparison satellite data not found.");
+        }
+
+        comparisonSatrec = satellite.json2satrec(data[0]);
+        comparisonSatelliteName = satelliteName;
+        comparisonNoradId = noradId;
+
+        document.getElementById("comparisonSecondary").textContent =
+            satelliteName;
+updateComparisonData();
+    } catch (error) {
+        console.error("Comparison satellite error:", error);
+    }
+} 
+function updateComparisonData() {
+
+    const now = new Date();
+
+    // PRIMARY SATELLITE
+    if (selectedSatrec) {
+
+        const primaryPV =
+            satellite.propagate(selectedSatrec, now);
+
+        const primaryPosition = primaryPV.position;
+        const primaryVelocity = primaryPV.velocity;
+
+        if (primaryPosition && primaryVelocity) {
+
+            const primaryGmst =
+                satellite.gstime(now);
+
+            const primaryGeodetic =
+                satellite.eciToGeodetic(
+                    primaryPosition,
+                    primaryGmst
+                );
+
+            const primaryAltitude =
+                primaryGeodetic.height;
+
+            const primarySpeed = Math.sqrt(
+                primaryVelocity.x ** 2 +
+                primaryVelocity.y ** 2 +
+                primaryVelocity.z ** 2
+            );
+
+            document.getElementById("comparisonPrimaryData").textContent =
+                `${primaryAltitude.toFixed(1)} km • ${primarySpeed.toFixed(2)} km/s`;
+        }
+    }
+
+    // SECONDARY SATELLITE
+    if (comparisonSatrec) {
+
+        const secondaryPV =
+            satellite.propagate(comparisonSatrec, now);
+
+        const secondaryPosition = secondaryPV.position;
+        const secondaryVelocity = secondaryPV.velocity;
+
+        if (secondaryPosition && secondaryVelocity) {
+
+            const secondaryGmst =
+                satellite.gstime(now);
+
+            const secondaryGeodetic =
+                satellite.eciToGeodetic(
+                    secondaryPosition,
+                    secondaryGmst
+                );
+
+            const secondaryAltitude =
+                secondaryGeodetic.height;
+
+            const secondarySpeed = Math.sqrt(
+                secondaryVelocity.x ** 2 +
+                secondaryVelocity.y ** 2 +
+                secondaryVelocity.z ** 2
+            );
+
+            document.getElementById("comparisonSecondaryData").textContent =
+                `${secondaryAltitude.toFixed(1)} km • ${secondarySpeed.toFixed(2)} km/s`;
+        }
     }
 }
 function updateSelectedSatellite() {
@@ -515,8 +625,22 @@ async function searchSatellites() {
     `;
 
     result.addEventListener("click", () => {
-        trackSatellite(satellite.NORAD_CAT_ID, satellite.OBJECT_NAME);
-    });
+
+    if (!comparisonSatrec) {
+        trackSatellite(
+            satellite.NORAD_CAT_ID,
+            satellite.OBJECT_NAME
+        );
+    } else if (
+        satellite.OBJECT_NAME !== comparisonSatelliteName
+    ) {
+        setComparisonSatellite(
+            satellite.NORAD_CAT_ID,
+            satellite.OBJECT_NAME
+        );
+    }
+
+});
 
     searchResults.appendChild(result);
 });
@@ -561,3 +685,5 @@ followSatelliteButton.addEventListener("click", () => {
         );
     }
 });
+setInterval(updateSelectedSatellite, 1000);
+setInterval(updateComparisonData, 1000);

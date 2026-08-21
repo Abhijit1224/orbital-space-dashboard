@@ -245,3 +245,50 @@ main {
 .selected-line {
     border-top-color: #555555;
 }
+.comparison-panel {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid #1b2942;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.comparison-slots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.comparison-slots > div {
+    padding: 14px;
+    border: 1px solid #1b2942;
+    border-radius: 10px;
+    background: #0b1224;
+}
+
+.comparison-slots span {
+    display: block;
+    color: #8290a8;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.comparison-slots strong {
+    display: block;
+    font-size: 14px;
+    color: #ffffff;
+    margin-bottom: 5px;
+}
+
+.comparison-slots small {
+    color: #55e6a5;
+    font-size: 12px;
+}
+
+@media (max-width: 800px) {
+    .comparison-slots {
+        grid-template-columns: 1fr;
+    }
+}
