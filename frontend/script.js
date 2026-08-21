@@ -6,7 +6,10 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
 }).addTo(map);
 
-async function trackISS() {
+let issMarker = null;
+let issSatrec = null;
+
+async function loadISSData() {
     const url =
         "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON";
 
@@ -18,35 +21,64 @@ async function trackISS() {
 
     const data = await response.json();
 
-    const satrec = satellite.json2satrec(data[0]);
+    issSatrec = satellite.json2satrec(data[0]);
+
+    updateISSPosition();
+}
+
+function updateISSPosition() {
+    if (!issSatrec) return;
 
     const now = new Date();
 
     const positionAndVelocity =
-        satellite.propagate(satrec, now);
+        satellite.propagate(issSatrec, now);
 
     const positionEci = positionAndVelocity.position;
+    const velocityEci = positionAndVelocity.velocity;
 
     const gmst = satellite.gstime(now);
 
     const geodetic =
         satellite.eciToGeodetic(positionEci, gmst);
 
-    const latitude =
-        satellite.degreesLat(geodetic.latitude);
+    const latitude = satellite.degreesLat(geodetic.latitude);
+    const longitude = satellite.degreesLong(geodetic.longitude);
 
-    const longitude =
-        satellite.degreesLong(geodetic.longitude);
+    const altitude = geodetic.height;
 
-    console.log("ISS Latitude:", latitude);
-    console.log("ISS Longitude:", longitude);
+    const velocity = Math.sqrt(
+        velocityEci.x ** 2 +
+        velocityEci.y ** 2 +
+        velocityEci.z ** 2
+    );
 
-    L.marker([latitude, longitude])
-        .addTo(map)
-        .bindPopup("🛰️ International Space Station")
-        .openPopup();
+    if (!issMarker) {
+        issMarker = L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup("🛰️ International Space Station");
+    } else {
+        issMarker.setLatLng([latitude, longitude]);
+    }
+
+    document.getElementById("latitude").textContent =
+        `${latitude.toFixed(2)}°`;
+
+    document.getElementById("longitude").textContent =
+        `${longitude.toFixed(2)}°`;
+
+    document.getElementById("altitude").textContent =
+        `${altitude.toFixed(1)} km`;
+
+    document.getElementById("velocity").textContent =
+        `${velocity.toFixed(2)} km/s`;
+
+    document.getElementById("updated").textContent =
+        now.toLocaleTimeString();
 }
 
-trackISS().catch(error => {
+loadISSData().catch(error => {
     console.error("ISS tracking error:", error);
 });
+
+setInterval(updateISSPosition, 1000);

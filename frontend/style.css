@@ -94,3 +94,29 @@ main {
     width: 100%;
     border-radius: 12px;
 }
+.satellite-info {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #1b2942;
+}
+
+.data-row:last-child {
+    border-bottom: none;
+}
+
+.data-row span {
+    color: #8290a8;
+}
+
+.data-row strong {
+    color: #55e6a5;
+    font-weight: 500;
+}
