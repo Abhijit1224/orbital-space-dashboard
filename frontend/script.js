@@ -53,7 +53,11 @@ function updateISSPosition() {
         velocityEci.y ** 2 +
         velocityEci.z ** 2
     );
+document.getElementById("analyticsAltitude").textContent =
+    `${altitude.toFixed(1)} km`;
 
+document.getElementById("analyticsVelocity").textContent =
+    `${velocity.toFixed(2)} km/s`;
     if (!issMarker) {
         issMarker = L.marker([latitude, longitude])
             .addTo(map)
