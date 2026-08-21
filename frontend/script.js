@@ -8,6 +8,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 let issMarker = null;
 let issSatrec = null;
+let followISS = false;
 
 async function loadISSData() {
     const url =
@@ -60,7 +61,9 @@ function updateISSPosition() {
     } else {
         issMarker.setLatLng([latitude, longitude]);
     }
-
+if (followISS) {
+    map.setView([latitude, longitude]);
+}
     document.getElementById("latitude").textContent =
         `${latitude.toFixed(2)}°`;
 
@@ -82,3 +85,16 @@ loadISSData().catch(error => {
 });
 
 setInterval(updateISSPosition, 1000);
+const followButton = document.getElementById("followButton");
+
+followButton.addEventListener("click", () => {
+    followISS = !followISS;
+
+    followButton.textContent = followISS
+        ? "🛰️ FOLLOWING ISS"
+        : "🛰️ FOLLOW ISS";
+
+    if (followISS && issMarker) {
+        map.setView(issMarker.getLatLng());
+    }
+});
